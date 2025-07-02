@@ -9,12 +9,22 @@
 
 void handle_client(asio::ip::tcp::socket client)
 {
-    std::cout<<"Any message for client... ?\n";
-    
-    std::string message;
-    std::getline(std::cin, message);
-    message = message + '\n'; //getline does not incluce '\n' , we need because client reads until '\n'
-    asio::write(client, asio::buffer(message));
+    //continue the chat with client in while loop to and fro
+    while (true)
+    {
+        std::cout<<"server : ";
+        std::string message;
+        std::getline(std::cin, message);
+        message = message + '\n'; //getline does not incluce '\n' , we need because client reads until '\n'
+        asio::write(client, asio::buffer(message));
+
+        //start listening message from client side...
+        asio::streambuf buffer;
+        asio::read_until(client, buffer, '\n');
+        std::istream is(&buffer);
+        std::getline(is, message);
+        std::cout<<"client : "<<message<<std::endl;
+    }
 }
 
 int main()
