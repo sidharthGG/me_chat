@@ -12,7 +12,6 @@ class TcpServer
 {
     private:
         int server_port;
-        
         /*have to use lvalue ref in context, since not copyassignable or copyconstructible
           and we do not use move operators since dont want to move io_context resources. 
         */
@@ -40,32 +39,55 @@ class TcpServer
                 std::cout<<"client connected from "<<client_socket.remote_endpoint()<<std::endl;
 
                 // handle client, send an example message
-                handle_client(std::move(client_socket));
+                // handle_client2(std::move(client_socket));
+                std::thread client_thread(&TcpServer::handle_client2,this, std::move(client_socket));
+                client_thread.detach();
             }
         }
 
-        void handle_client(asio::ip::tcp::socket client_socket)
+        void read(asio::ip::tcp::socket& client_socket)
         {
+            std::string message;
+            // int fd = client_socket.native_handle();
+            // std::cout << "Socket FD: " << fd << "\n"; // -1 means invalid
+            if (!client_socket.is_open())
+            {
+                std::cout<<"client socket is not open\n";
+                return;
+            }
+
             while (true)
             {
-                std::string message;
-                if (this->read_message(std::ref(client_socket), std::ref(message)) )
+                if (this->read_message(client_socket, message) )
                 {
                     std::cout<<"error in read_message, stopping.\n";
                     break;
                 }   
-                std::cout<<"client: "<<message<<std::endl;                
-           
-                message.clear();
+                std::cout<<"\nclient: "<<message<<std::endl; 
+            }
+        }
 
-                std::cout<<"server: ";
+        void write(asio::ip::tcp::socket& client_socket)
+        {
+            std::string message;
+            while (true)
+            {
+                std::cout<<"Server:";
                 std::getline(std::cin, message);
-                if (this->send_message(std::ref(client_socket), message))
+                if (this->send_message(client_socket, message))
                 {
                     std::cout<<"error in send_message, stopping.\n";
                     break;
                 }
-            }            
+            }
+        }
+        void handle_client2(asio::ip::tcp::socket client_socket)
+        {
+            std::thread read_thread(&TcpServer::read, this, std::ref(client_socket));
+
+            std::thread write_thread(&TcpServer::write, this, std::ref(client_socket));
+            read_thread.join();
+            write_thread.join();
         }
 
         std::error_code read_message(asio::ip::tcp::socket& client_socket, std::string& message)
@@ -91,6 +113,8 @@ class TcpServer
             );
 
             uint32_t buffer_len = ntohl(net_len);
+
+            message.clear();
             message.resize(buffer_len);
           
             bytes_read = asio::read(client_socket, asio::buffer(message, message.length()), r_ec);
