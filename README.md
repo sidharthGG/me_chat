@@ -15,10 +15,8 @@ cd me_chat
 
 ### 2. Build/Compile
 ```bash
-mkdir build && cd build
-cmake .. -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
-cd ..
-cmake -S . -B build/
+mkdir build
+cmake -S . -B build/ -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
 cd build/
 make
 ```
