@@ -28,6 +28,8 @@ target_link_libraries(boost ${Boost_INCLUDE_DIRS})
 target_link_libraries(server PUBLIC myLib)
 target_link_libraries(client PUBLIC myLib)
 
+target_link_libraries(server PUBLIC myLib)
+target_link_libraries(client PUBLIC myLib)
 
 
 # For threading support
