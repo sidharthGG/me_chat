@@ -19,6 +19,7 @@ class TcpServer
         */
         asio::io_context& server_context;  
         asio::ip::tcp::acceptor server_socket;
+        std::mutex active_clients_mtx;
         std::map<std::string, std::shared_ptr<Session>> active_clients_;
     public:
         TcpServer(asio::io_context& context, int port) : 
@@ -98,6 +99,9 @@ class TcpServer
                 std::cout<<"client socket is closed\n";
                 return;
             }
+
+            //take lock for active_clients_
+            std::lock_guard<std::mutex> lock(active_clients_mtx);
 
             std::string message;
             //indefinitely ask for LOGIN
@@ -184,6 +188,8 @@ class TcpServer
                 return 2;
             }
 
+            std::lock_guard<std::mutex> lock(active_clients_mtx);
+
             if (this->active_clients_.find(recipient) == this->active_clients_.end())
             {
                 std::cout<<"No such username as "<<recipient<<std::endl;
@@ -206,6 +212,8 @@ class TcpServer
                 std::cout<<"empty message\n";
                 return 2;
             }
+
+            std::lock_guard<std::mutex> lock(active_clients_mtx);
 
             for(auto it = this->active_clients_.begin();it!=this->active_clients_.end();it++)
             {

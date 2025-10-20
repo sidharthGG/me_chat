@@ -5,6 +5,8 @@
   "dependencies": [
     "nlohmann-json",
     "gtest",
-    "asio"
+    "asio",
+    "boost-beast",
+    "boost-asio"
   ]
 }
